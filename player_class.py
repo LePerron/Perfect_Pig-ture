@@ -96,6 +96,8 @@ class Player:
         tile_rect = pygame.Rect(self.tile_facing.posx, self.tile_facing.posy,
                                 self.tile_facing.surface.get_width(), self.tile_facing.surface.get_height())
 
+        self.tile_to_plow = self.tile_facing
+
         self.rect.x = tile_rect.centerx - self.rect.width // 2 - 32
         self.rect.y = tile_rect.centery - self.rect.height // 2 - 24
         self.is_plowing = True
@@ -120,7 +122,6 @@ class Player:
                 self.player_facing = 3
 
     def get_current_player_frame(self, current_time):
-
         if current_time - self.player_last_update >= self.animation_cooldown:
             self.animation_frame += 1
             self.player_last_update = current_time
@@ -129,7 +130,7 @@ class Player:
             player_images_list = self.player_action_list[self.player_action]
             if self.animation_frame >= len(player_images_list):
                 self.animation_frame = 0
-                self.update_tile_state()
+                self.update_tile_state(self.tile_to_plow)
         else:
             player_images_list = self.player_animation_list[self.player_movement]
             if self.animation_frame >= len(player_images_list):
@@ -144,7 +145,7 @@ class Player:
         elif event.key == pygame.K_2:
             self.tool_equipped = 1
 
-        # What action the player is doing
+        # Which action the player is doing
         elif event.key == pygame.K_b:
             self.is_placing_tile = not self.is_placing_tile
         elif event.key == pygame.K_e:
@@ -166,9 +167,9 @@ class Player:
                 self.make_player_plow_farmtile()
                 self.animation_frame = 0
 
-    def update_tile_state(self):
-        if self.is_plowing and self.tile_facing:
-            self.tile_facing.plowing_needed = False
+    def update_tile_state(self, tile_to_update):
+        if self.is_plowing and tile_to_update:
+            tile_to_update.plowing_needed = False
             self.is_plowing = False
 
     def handle_player_movement(self, keys):
