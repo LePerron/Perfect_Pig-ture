@@ -1,16 +1,19 @@
 from random import randint
 import pygame
 
+from crops_class import Crops
+from farmtiles_class import FarmTiles
+
 
 class Player:
 
-    def __init__(self, tool_equiped=0, rect=None, surface=None, current_action=None, tile_facing=None, crop_facing=None,
-                 is_plowing=False, animation_frame=0, player_last_update=pygame.time.get_ticks(),
-                 animation_cooldown=randint(150, 240), player_animation_list=None, player_action_list=None,
-                 player_animation_steps=None, player_action_steps=None, player_movement=None, player_facing=None,
-                 player_action=None, player_width=0, player_height=0, player_scale=0, is_placing_tile=False, is_placing_crop=False):
+    def __init__(self, tool_equipped=0, rect=None, surface=None, current_action=None, tile_facing=None, crop_facing=None,
+                 is_plowing=False, animation_frame=0, player_last_update=None, animation_cooldown=None,
+                 player_animation_list=None, player_action_list=None, player_animation_steps=None,
+                 player_action_steps=None, player_movement=0, player_facing=0, player_action=0,
+                 player_width=0, player_height=0, player_scale=0, is_placing_tile=False, is_placing_crop=False):
 
-        self.tool_equiped = tool_equiped
+        self.tool_equipped = tool_equipped
         self.rect = rect
         self.surface = surface
         self.current_action = current_action
@@ -18,31 +21,21 @@ class Player:
         self.crop_facing = crop_facing
         self.is_plowing = is_plowing
         self._animation_frame = animation_frame
-        self.player_last_update = player_last_update
-        self.animation_cooldown = animation_cooldown
+        self.player_last_update = player_last_update or pygame.time.get_ticks()
+        self.animation_cooldown = animation_cooldown or randint(150, 240)
         self.player_width = player_width
         self.player_height = player_height
         self.player_scale = player_scale
         self.is_placing_tile = is_placing_tile
         self.is_placing_crop = is_placing_crop
 
-
-
-
-        if not player_animation_list:
-            self.player_animation_list = []
-        if not player_action_list:
-            self.player_action_list = []
-        if not player_animation_steps:
-            self.player_animation_steps = []
-        if not player_action_steps:
-            self.player_action_steps = []
-        if not player_movement:
-            self.player_movement = 0
-        if not player_facing:
-            self.player_facing = 0
-        if not player_action:
-            self.player_action = 0
+        self.player_animation_steps = player_animation_steps or []
+        self.player_animation_list = player_animation_list or []
+        self.player_action_steps = player_action_steps or []
+        self.player_action_list = player_action_list or []
+        self.player_movement = player_movement
+        self.player_facing = player_facing
+        self.player_action = player_action
 
 
     @property
@@ -97,6 +90,9 @@ class Player:
 
 
     def make_player_plow_farmtile(self):
+        if not self.tile_facing:
+            return
+
         tile_rect = pygame.Rect(self.tile_facing.posx, self.tile_facing.posy,
                                 self.tile_facing.surface.get_width(), self.tile_facing.surface.get_height())
 
@@ -133,12 +129,104 @@ class Player:
             player_images_list = self.player_action_list[self.player_action]
             if self.animation_frame >= len(player_images_list):
                 self.animation_frame = 0
-                self.tile_facing.plowing_needed = False
-                self.is_plowing = False
+                self.update_tile_state()
         else:
             player_images_list = self.player_animation_list[self.player_movement]
             if self.animation_frame >= len(player_images_list):
                 self.animation_frame = 0
 
         self.surface = player_images_list[self.animation_frame]
+
+    def handle_keydown(self, event):
+        # What tool the player has equipped.
+        if event.key == pygame.K_1:
+            self.tool_equipped = 0
+        elif event.key == pygame.K_2:
+            self.tool_equipped = 1
+
+        # What action the player is doing
+        elif event.key == pygame.K_b:
+            self.is_placing_tile = not self.is_placing_tile
+        elif event.key == pygame.K_e:
+            self.is_placing_crop = not self.is_placing_crop
+
+        elif event.key == pygame.K_SPACE:
+            self.perform_action()
+
+    def perform_action(self):
+        if self.tool_equipped == 0:
+            if self.crop_facing and self.crop_facing.harvestable:
+                self.make_player_face_crop()
+                self.crop_facing.stage = "harvesting"
+                self.crop_facing.tile.plowing_needed = True
+                self.crop_facing.harvestable = False
+
+        elif self.tool_equipped == 1:
+            if self.tile_facing and self.tile_facing.plowing_needed:
+                self.make_player_plow_farmtile()
+                self.animation_frame = 0
+
+    def update_tile_state(self):
+        if self.is_plowing and self.tile_facing:
+            self.tile_facing.plowing_needed = False
+            self.is_plowing = False
+
+    def handle_player_movement(self, keys):
+        if not self.is_plowing:
+
+            if keys[pygame.K_w]:
+                self.rect.move_ip(0, -5)
+                self.player_movement = 7
+                self.player_facing = 3
+            elif keys[pygame.K_s]:
+                self.rect.move_ip(0, 5)
+                self.player_movement = 4
+                self.player_facing = 0
+            elif keys[pygame.K_a]:
+                self.rect.move_ip(-5, 0)
+                self.player_movement = 6
+                self.player_facing = 2
+            elif keys[pygame.K_d]:
+                self.rect.move_ip(5, 0)
+                self.player_movement = 5
+                self.player_facing = 1
+            else:
+                if self.player_movement != self.player_facing:
+                    self.animation_frame = 0
+                self.player_movement = self.player_facing
+
+    def place_tile(self, keys, screen):
+        if self.is_placing_tile:
+            tile = FarmTiles()
+            show_placing_grid = True
+            tile.update(screen.get_width() // 18)
+            tile.draw(screen)
+            if keys[pygame.K_SPACE] and tile.is_valid_placing():
+                FarmTiles.create_tile(tile)
+                self.is_placing_tile = False
+        else:
+            show_placing_grid = False
+        return show_placing_grid
+
+    def place_crop(self, keys, screen):
+        if self.is_placing_crop:
+            crop = Crops()
+            show_placing_grid = True
+            crop.update(screen.get_width() // 18)
+            crop.draw(screen)
+
+            if keys[pygame.K_SPACE] and crop.is_valid_placing():
+                Crops.create_crop(crop)
+                from main import current_time
+                crop.last_update = current_time
+
+                for tile in FarmTiles.farm_tiles:
+                    tile_rect = pygame.Rect(tile.posx, tile.posy, tile.surface.get_width(), tile.surface.get_height())
+                    if tile_rect.colliderect(crop.square):
+                        crop.tile = tile
+
+                self.is_placing_crop = False
+        else:
+            show_placing_grid = False
+        return show_placing_grid
 

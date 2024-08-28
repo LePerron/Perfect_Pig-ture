@@ -89,8 +89,9 @@ Crops.list_surface_crops_animation = crop_animation_list
 
 
 def draw_grid(w, rows, show=False):
-    sizebtwn = w // rows
     if show:
+        sizebtwn = w // rows
+
         for i in range(0, screen.get_width(), sizebtwn):
             x, y = i, i
             pygame.draw.line(screen, GREY, (x, 0), (x, w))
@@ -102,7 +103,6 @@ while running:
     # initialisation #
     screen.fill(BG)
     pygame.mouse.set_visible(False)
-    draw_grid(screen.get_width(), 18, show_placing_grid)
 
     current_time = pygame.time.get_ticks()
 
@@ -120,94 +120,22 @@ while running:
                 if growth_probability == 1:
                     crop.stage += 1
 
-    player.get_player_is_facing(Crops.crops_planted, FarmTiles.farm_tiles, True, screen)
-    player.get_current_player_frame(current_time)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            player.handle_keydown(event)
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_1:
-                player.tool_equiped = 0
-            elif event.key == pygame.K_2:
-                player.tool_equiped = 1
-
-            if event.key == pygame.K_b:
-                if player.is_placing_tile:
-                    player.is_placing_tile = False
-                else:
-                    player.is_placing_tile = True
-
-            if event.key == pygame.K_e:
-                if player.is_placing_crop:
-                    player.is_placing_crop = False
-                else:
-                    player.is_placing_crop = True
-
-            if event.key == pygame.K_SPACE:
-                if player.tool_equiped == 0:
-                    if player.crop_facing and player.crop_facing.harvestable:
-                        player.make_player_face_crop()
-                        player.crop_facing.stage = "harvesting"
-                        player.crop_facing.tile.plowing_needed = True
-                        player.crop_facing.harvestable = False
-
-                elif player.tool_equiped == 1:
-                    if player.tile_facing and player.tile_facing.plowing_needed:
-                        player.make_player_plow_farmtile()
-                        player.animation_frame = 0
-
-
+    keys = pygame.key.get_pressed()
     screen.blit(player.surface, player.rect)
 
-    if not player.is_plowing:
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_w]:
-            player.rect.move_ip(0, -5)
-            player.player_movement = 7
-            player.player_facing = 3
-        elif keys[pygame.K_s]:
-            player.rect.move_ip(0, 5)
-            player.player_movement = 4
-            player.player_facing = 0
-        elif keys[pygame.K_a]:
-            player.rect.move_ip(-5, 0)
-            player.player_movement = 6
-            player.player_facing = 2
-        elif keys[pygame.K_d]:
-            player.rect.move_ip(5, 0)
-            player.player_movement = 5
-            player.player_facing = 1
-        else:
-            if player.player_movement != player.player_facing:
-                player.animation_frame = 0
-            player.player_movement = player.player_facing
+    player.get_current_player_frame(current_time)
+    player.get_player_is_facing(Crops.crops_planted, FarmTiles.farm_tiles, True, screen)
 
-        if player.is_placing_tile:
-            tile = FarmTiles()
-            show_placing_grid = True
-            tile.update(screen.get_width() // 18)
-            tile.draw(screen)
-            if keys[pygame.K_SPACE] and tile.is_valid_placing():
-                FarmTiles.create_tile(tile)
-                player.is_placing_tile = False
-        else:
-            show_placing_grid = False
 
-        if player.is_placing_crop:
-            crop = Crops()
-            crop.last_update = current_time
-            show_placing_grid = True
-            crop.update(screen.get_width() // 18)
-            crop.draw(screen)
-            if keys[pygame.K_SPACE] and crop.is_valid_placing():
-                Crops.create_crop(crop)
-                for tile in FarmTiles.farm_tiles:
-                    tile_rect = pygame.Rect(tile.posx, tile.posy, tile.surface.get_width(), tile.surface.get_height())
-                    if tile_rect.colliderect(crop.square):
-                        crop.tile = tile
-                player.is_placing_crop = False
+    show_placing_grid = player.place_tile(keys, screen) or player.place_crop(keys, screen)
+    if show_placing_grid:
+        draw_grid(screen.get_width(), 18, show_placing_grid)
 
     clock.tick(60) / 2000
     pygame.display.flip()

@@ -20,10 +20,9 @@ class FarmTiles:
     @plowing_needed.setter
     def plowing_needed(self, v_plowing_needed):
         self._plowing_needed = v_plowing_needed
-        if self.crop_planted:
-            if not v_plowing_needed and self.crop_planted.state == "harvested":
-                self.crop_planted.remove_crop()
-                self.crop_planted = None
+        if not v_plowing_needed and self.crop_planted and self.crop_planted.state == "harvested":
+            self.crop_planted.remove_crop()
+            self.crop_planted = None
 
     def update(self, sizebtwn):
         x, y = pygame.mouse.get_pos()
@@ -33,6 +32,7 @@ class FarmTiles:
         self.square = pygame.Rect(self.posx, self.posy, sizebtwn, sizebtwn)
 
     def draw(self, screen):
+        pygame.draw.rect(screen, (255, 255, 255), self.square, 1)  # DEBUGGING
         screen.blit(self.surface, (self.square.x, self.square.y))
         if self.is_valid_placing():
             screen.blit(self.colorize(self.surface, (0, 255, 0)), (self.square.x, self.square.y))
@@ -40,7 +40,7 @@ class FarmTiles:
             screen.blit(self.colorize(self.surface, (255, 0, 0)), (self.square.x, self.square.y))
 
     def is_valid_placing(self):
-        return not self.square.collideobjects(self.get_rects_tiles())
+        return not any(self.square.colliderect(rect) for rect in self.get_rects_tiles())
 
     @staticmethod
     def colorize(image, new_color):
