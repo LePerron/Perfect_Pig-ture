@@ -1,5 +1,5 @@
+from farmtiles_class import FarmTiles
 import pygame
-from farm_tile_class import FarmTiles
 
 
 class Crops:

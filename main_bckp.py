@@ -2,7 +2,7 @@ from player_class import Player
 from farm_tile_class import FarmTiles
 from crops_class import Crops
 from random import randint
-import spritesheet
+import spritesheet_class
 import pygame
 
 

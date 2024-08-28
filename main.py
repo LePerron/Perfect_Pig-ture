@@ -1,8 +1,9 @@
+from spritesheet_class import SpriteSheet
+from farmtiles_class import FarmTiles
 from player_class import Player
-from farm_tile_class import FarmTiles
 from crops_class import Crops
+
 from random import randint
-import spritesheet
 import pygame
 
 
@@ -32,7 +33,7 @@ farm_tile = pygame.image.load("assets/pixil-frame-0.png")
 
 # Player movement assets #
 player_spritesheet_image = pygame.image.load("assets/hero2.png").convert_alpha()
-player_spritesheet = spritesheet.SpriteSheet(player_spritesheet_image)
+player_spritesheet = SpriteSheet(player_spritesheet_image)
 player.player_animation_steps = [3, 3, 3, 3, 4, 4, 4, 4]
 
 for player_animation in player.player_animation_steps:
@@ -46,7 +47,7 @@ for player_animation in player.player_animation_steps:
 
 # Player action assets #
 player_action_spritesheet_image = pygame.image.load("assets/plowing2.png").convert_alpha()
-player_action_spritesheet = spritesheet.SpriteSheet(player_action_spritesheet_image)
+player_action_spritesheet = SpriteSheet(player_action_spritesheet_image)
 player.player_action_steps = [6]
 
 PLAYER_ACTION_WIDTH = 24
@@ -66,7 +67,7 @@ for player_animation_action in player.player_action_steps:
 
 # Crops assets #
 crops_spritesheet_image = pygame.image.load("assets/crops.png").convert_alpha()
-crops_spritesheet = spritesheet.SpriteSheet(crops_spritesheet_image)
+crops_spritesheet = SpriteSheet(crops_spritesheet_image)
 
 crop_animation_list = []
 crop_animation_steps = [5, 5, 5, 5]

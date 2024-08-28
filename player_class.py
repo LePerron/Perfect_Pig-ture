@@ -1,8 +1,5 @@
 from random import randint
-
 import pygame
-
-from crops_class import Crops
 
 
 class Player:
