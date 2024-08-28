@@ -9,7 +9,7 @@ import pygame
 
 pygame.init()
 screen = pygame.display.set_mode((980, 720))
-pygame.display.set_caption('Jeu farm ?')
+pygame.display.set_caption('Perfect Pig-ture')
 clock = pygame.time.Clock()
 
 BG = (50, 50, 50)
