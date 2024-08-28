@@ -127,13 +127,14 @@ while running:
             player.handle_keydown(event)
 
     keys = pygame.key.get_pressed()
-    screen.blit(player.surface, player.rect)
 
+    player.handle_player_movement(keys)
     player.get_current_player_frame(current_time)
+    screen.blit(player.surface, player.rect)
     player.get_player_is_facing(Crops.crops_planted, FarmTiles.farm_tiles, True, screen)
 
-
-    show_placing_grid = player.place_tile(keys, screen) or player.place_crop(keys, screen)
+    show_placing_grid = player.place_crop(keys, screen, current_time)
+    show_placing_grid = player.place_tile(keys, screen)
     if show_placing_grid:
         draw_grid(screen.get_width(), 18, show_placing_grid)
 

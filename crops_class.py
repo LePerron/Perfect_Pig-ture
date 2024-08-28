@@ -16,7 +16,7 @@ class Crops:
         self.state = state
         self._tile = tile
         self.crop_cooldown = crop_cooldown
-        self.last_update = last_update
+        self.last_update = last_update or pygame.time.get_ticks()
 
         if not self.posx:
             self.posx = 0

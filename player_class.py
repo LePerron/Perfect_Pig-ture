@@ -173,7 +173,6 @@ class Player:
 
     def handle_player_movement(self, keys):
         if not self.is_plowing:
-
             if keys[pygame.K_w]:
                 self.rect.move_ip(0, -5)
                 self.player_movement = 7
@@ -208,7 +207,7 @@ class Player:
             show_placing_grid = False
         return show_placing_grid
 
-    def place_crop(self, keys, screen):
+    def place_crop(self, keys, screen, current_time):
         if self.is_placing_crop:
             crop = Crops()
             show_placing_grid = True
@@ -217,15 +216,16 @@ class Player:
 
             if keys[pygame.K_SPACE] and crop.is_valid_placing():
                 Crops.create_crop(crop)
-                from main import current_time
+
                 crop.last_update = current_time
 
                 for tile in FarmTiles.farm_tiles:
                     tile_rect = pygame.Rect(tile.posx, tile.posy, tile.surface.get_width(), tile.surface.get_height())
-                    if tile_rect.colliderect(crop.square):
+                    if crop.square.colliderect(tile_rect):
                         crop.tile = tile
+                        self.is_placing_crop = False
+                        break
 
-                self.is_placing_crop = False
         else:
             show_placing_grid = False
         return show_placing_grid
